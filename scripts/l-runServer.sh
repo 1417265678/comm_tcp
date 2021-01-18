@@ -1,1 +1,1 @@
-rosrun comm_tcp server_node 1024
+rosrun comm_tcp server_node 5566

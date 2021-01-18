@@ -32,16 +32,34 @@ private:
     char topic_message[256] = { 0 };
 public:
     void callback(const std_msgs::String::ConstPtr& msg);
-    char* getMessageValue();
+    char* getMessageValue();  //返回位置信息
 };
 
-void Listener::callback(const std_msgs::String::ConstPtr& msg) {
-    memset(topic_message, 0, 256);
+void Listener::callback(const std_msgs::String::ConstPtr& msg) {   //回调函数1
+    memset(topic_message, 0, 256);   //清零
     strcpy(topic_message, msg->data.c_str());
-    ROS_INFO("I heard:[%s]", msg->data.c_str());
+    ROS_INFO("I heard:[%s]", msg->data.c_str());  //打印位置信息
 }
 
 char* Listener::getMessageValue() {
+    return topic_message;
+}
+//
+class Listener2 {
+private:
+    char topic_message[256] = { 0 };
+public:
+    void callback(const std_msgs::String::ConstPtr& msg);
+    char* getMessageValue();  //返回速度信息
+};
+
+void Listener2::callback(const std_msgs::String::ConstPtr& msg) {  //回调函数2
+    memset(topic_message, 0, 256);   //清零
+    strcpy(topic_message, msg->data.c_str());
+    ROS_INFO("I heard:[%s]", msg->data.c_str());  //打印速度信息
+}
+
+char* Listener2::getMessageValue() {
     return topic_message;
 }
 
@@ -50,7 +68,9 @@ int main(int argc, char *argv[]) {
 	ros::NodeHandle nh;
     ros::Rate loop_rate(MESSAGE_FREQ); // set the rate as defined in the macro MESSAGE_FREQ
 	Listener listener;
-        ros::Subscriber client_sub = nh.subscribe("/client_messages", 1, &Listener::callback, &listener);
+    Listener2 listener2;
+        ros::Subscriber client_sub = nh.subscribe("/client_messages", 10, &Listener::callback, &listener); //订阅位置信息话题，执行回调函数1
+        ros::Subscriber client_sub2 = nh.subscribe("/client_messages2", 10, &Listener2::callback, &listener2);  //订阅速度话题，执行回调函数2
     int sockfd, portno, n, choice = 1;
     struct sockaddr_in serv_addr;
     struct hostent *server;
@@ -84,7 +104,7 @@ int main(int argc, char *argv[]) {
             printf("Please enter the message: ");
             fgets(buffer,255,stdin);
         } else if (choice == 2) {
-            strcpy(buffer, listener.getMessageValue());
+            strcpy(buffer, strcat(strcat(listener.getMessageValue()," "),listener2.getMessageValue()));  //连接位置信息和速度信息，存储到buffer中
             loop_rate.sleep();
         }
 	    n = write(sockfd,buffer,strlen(buffer));
